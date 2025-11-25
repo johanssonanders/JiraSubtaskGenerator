@@ -7,7 +7,7 @@ namespace JiraSubtaskGenerator
   {
     public static bool TryParse(string markdown, out JiraSubtaskBatch batch)
     {
-      var lines = markdown.Split("\r\n");
+      var lines = markdown.Split(new [] {"\r\n", "\n", "\r"}, StringSplitOptions.None);
 
       var headerPattern = new Regex(@"^@([A-Za-z0-9]+):([A-Za-z0-9\-]+)");
       var subtaskPattern = new Regex(@"^##\s*(.+?)\s*\|\|\s*(\d+)");
