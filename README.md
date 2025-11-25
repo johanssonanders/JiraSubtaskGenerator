@@ -14,25 +14,64 @@ A C# .NET Core console application that reads a Markdown file and creates Jira s
 - .NET SDK 10.0+
 - A Jira account and [API token](https://id.atlassian.com/manage/api-tokens)
 
+
 ## 🚀 Usage
 
-### Build
+### Installing the tool locally
+
+If you have received the `.nupkg` file for **JiraSubtaskGenerator**, you can install it as a local .NET tool without needing any external package feed.
+
+#### 1. Place the `.nupkg` file somewhere on your machine
+
+For example:
+
+- `C:\local-tools` on Windows  
+- `~/local-tools` on Linux or macOS  
+
+Make sure the `.nupkg` file is inside that folder.
+
+#### 2. Install the tool using the local source
+
+##### Windows
 
 ```bash
-dotnet build
+dotnet tool install --global JiraSubtaskGenerator \
+  --version 1.0.0 \
+  --add-source "C:\local-tools"
+```
+##### Linux / macOS
+
+```bash
+dotnet tool install --global JiraSubtaskGenerator \
+  --version 1.0.0 \
+  --add-source "$HOME/local-tools"
 ```
 
+##### Linux / macOS
+
+```bash
+dotnet tool install --global JiraSubtaskGenerator \
+  --version 1.0.0 \
+  --add-source "$HOME/local-tools"
+```
+
+#### 3. Updating the tool
+If you replace the .nupkg file with a newer version in the same folder, update using:
+```bash
+dotnet tool update --global JiraSubtaskGenerator \
+  --add-source "C:\local-tools"
+```
 ### Run
 
 #### Dry Run
 ```bash
-dotnet run --file input.md --dry-run
+subtasks --file input.md --dry-run
 ```
 
 #### Real Jira Creation
 
 ```bash
-dotnet run --file input.md
+subtasks --file input.md
 ```
 
 > ⚠️ Make sure to configure your Jira URL, email, and API token as environment variables:
