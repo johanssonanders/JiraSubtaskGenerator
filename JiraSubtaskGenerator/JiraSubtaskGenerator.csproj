@@ -5,6 +5,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>JiraSubtaskGenerator</RootNamespace>
 
     <!-- Turn app into a .NET tool -->
     <PackAsTool>true</PackAsTool>
@@ -16,11 +17,18 @@
     <Authors>Anders Johansson</Authors>
     <Description>A C# .NET Core console application that reads a Markdown file and creates Jira subtasks under a specified parent issue (Story/Task).</Description>
     <PackageOutputPath>./nupkg</PackageOutputPath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\README.md" />
+    <None Include="..\README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
 </Project>

@@ -63,6 +63,11 @@ dotnet tool update --global JiraSubtaskGenerator \
 ```
 ### Run
 
+#### Help
+```bash
+subtasks --help
+```
+
 #### Dry Run
 ```bash
 subtasks --file input.md --dry-run
