@@ -11,7 +11,7 @@ A C# .NET Core console application that reads a Markdown file and creates Jira s
 
 ## 📦 Prerequisites
 
-- .NET SDK 8.0+
+- .NET SDK 10.0+
 - A Jira account and [API token](https://id.atlassian.com/manage/api-tokens)
 
 ## 🚀 Usage
