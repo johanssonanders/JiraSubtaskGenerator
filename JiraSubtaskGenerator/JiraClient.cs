@@ -20,10 +20,38 @@ namespace JiraSubtaskGenerator
 
       var authToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{email}:{apiToken}"));
       _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
+      _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
-    public async Task<string> CreateSubtaskAsync(string projectKey, string parentKey, Subtask subtask)
+    public async Task<IReadOnlyList<JiraIssueType>> GetSubtaskIssueTypesForProjectKeyAsync(string projectKey, CancellationToken cancellationToken = default)
     {
+      var projectId = await this.GetProjectIdAsync(projectKey, cancellationToken);
+      return await this.GetSubtaskIssueTypesForProjectAsync(projectId, cancellationToken);
+    }
+
+    private async Task<string> GetProjectIdAsync(string projectKey, CancellationToken cancellationToken = default)
+    {
+      var url = $"/rest/api/3/project/{Uri.EscapeDataString(projectKey)}";
+
+      using var response = await _httpClient.GetAsync(url, cancellationToken);
+      response.EnsureSuccessStatusCode();
+
+      var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
+      var project = JsonConvert.DeserializeObject<JiraProjectInfo>(json);
+      return project?.Id
+          ?? throw new InvalidOperationException($"Project '{projectKey}' not found.");
+    }
+
+    public async Task<string> CreateSubtaskAsync(string projectKey, JiraIssueType subtaskType, string parentKey, Subtask subtask)
+    {
+      ArgumentNullException.ThrowIfNull(subtaskType);
+
+      if (!subtaskType.IsSubtask)
+      {
+        throw new InvalidOperationException("subtaskType must be a subtask issue type");
+      }
+
       var payload = new
       {
         fields = new
@@ -55,10 +83,10 @@ namespace JiraSubtaskGenerator
           },
           issuetype = new
           {
-            name = "Deluppgift" // TOOD: Check with this is in Swedish on my jira project. Do I need to have this configurable? See https://developer.atlassian.com/server/jira/platform/jira-rest-api-examples/#creating-a-sub-task
+            id = subtaskType.Id
           },
           timetracking = new
-          {	
+          {
             originalEstimate = $"{subtask.EstimatedHours}h"
           }
         }
@@ -78,6 +106,28 @@ namespace JiraSubtaskGenerator
 
       var result = JsonConvert.DeserializeObject<Dictionary<string, object>>(await response.Content.ReadAsStringAsync());
       return result?["key"]?.ToString() ?? "Unknown";
+    }
+
+
+    private async Task<IReadOnlyList<JiraIssueType>> GetSubtaskIssueTypesForProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+      var all = await this.GetIssueTypesForProjectAsync(projectId, cancellationToken);
+      return all.Where(t => t.IsSubtask).ToList();
+    }
+
+    private async Task<IReadOnlyList<JiraIssueType>> GetIssueTypesForProjectAsync(string projectId, CancellationToken cancellationToken = default)
+    {
+      var url = $"/rest/api/3/issuetype/project?projectId={Uri.EscapeDataString(projectId)}";
+
+      using var response = await _httpClient.GetAsync(url, cancellationToken);
+      response.EnsureSuccessStatusCode();
+
+      var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
+      // Use Newtonsoft to deserialize the JSON array directly
+      var issueTypes = JsonConvert.DeserializeObject<List<JiraIssueType>>(json);
+
+      return issueTypes ?? new List<JiraIssueType>();
     }
   }
 }

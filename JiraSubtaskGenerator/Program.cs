@@ -53,9 +53,22 @@ namespace JiraSubtaskGenerator
         else
         {
           var jira = new JiraClient(jiraUrl, jiraEmail, jiraToken, logger);
+          var subTaskTypes = await jira.GetSubtaskIssueTypesForProjectKeyAsync(batch.ProjectKey);
+          foreach (var s in subTaskTypes)
+          {
+            logger.LogInformation($"Found subtask issuetype with name '{s.Name}' and id '{s.Id}'");
+          }
+
+          var subtaskType = subTaskTypes.FirstOrDefault();
+          if (subtaskType == null)
+          {
+            logger.LogError("No subtask issuetypes found in the project.");
+            return 2;
+          }
+
           foreach (var s in batch.Subtasks)
           {
-            var issueKey = await jira.CreateSubtaskAsync(batch.ProjectKey, batch.ParentKey, s);
+            var issueKey = await jira.CreateSubtaskAsync(batch.ProjectKey, subtaskType , batch.ParentKey, s);
             logger.LogInformation($"Created subtask: {issueKey} for '{s.Title}'");
           }
         }
@@ -63,7 +76,7 @@ namespace JiraSubtaskGenerator
       catch (Exception ex)
       {
         logger.LogError(ex, "Unexpected error occurred.");
-        return 2;
+        return 3;
       }
 
       return 0;
