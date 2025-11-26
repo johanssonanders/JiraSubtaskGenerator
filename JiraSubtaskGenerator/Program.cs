@@ -12,6 +12,7 @@ namespace JiraSubtaskGenerator
   {
     static async Task<int> Main(string[] args)
     {
+      Console.OutputEncoding = Encoding.UTF8;
       var help = args.Contains("--help") || args.Contains("--readme");
 
       if (help)
