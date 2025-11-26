@@ -2,7 +2,7 @@
 
 A C# .NET Core console application that reads a Markdown file and creates Jira subtasks under a specified parent issue (Story/Task).
 
-## 🛠 Features
+## ✨Features
 
 - Parses markdown-formatted task lists
 - Generates Jira subtasks
@@ -15,7 +15,7 @@ A C# .NET Core console application that reads a Markdown file and creates Jira s
 - A Jira account and [API token](https://id.atlassian.com/manage/api-tokens)
 
 
-## 🚀 Usage
+## 📘 Usage
 
 ### Installing the tool locally
 
@@ -61,7 +61,10 @@ If you replace the .nupkg file with a newer version in the same folder, update u
 dotnet tool update --global JiraSubtaskGenerator \
   --add-source "C:\local-tools"
 ```
-### Run
+### 🚀 Run
+If installed as tool from a nuget package to executable can be called with `subtasks` subtasks command, the examples below is using that syntax.
+
+If the executable is used directly, call it as per usual with `JiraSubtaskGenerator.exe`.
 
 #### Help
 ```bash
@@ -81,7 +84,7 @@ subtasks --file input.md
 
 > ⚠️ Make sure to configure your Jira URL, email, and API token as environment variables:
 
-##### Environment Variables
+## 🛠️ Environment Variables
 On Windows, you can set environment variables in PowerShell like this:
 ```powershell
 $env:JIRA_URL="https://yourdomain.atlassian.net"
