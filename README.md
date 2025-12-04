@@ -36,14 +36,14 @@ Make sure the `.nupkg` file is inside that folder.
 
 ```bash
 dotnet tool install --global JiraSubtaskGenerator \
-  --version 1.0.0 \
+  --version 1.0.1 \
   --add-source "C:\local-tools"
 ```
 ##### Linux / macOS
 
 ```bash
 dotnet tool install --global JiraSubtaskGenerator \
-  --version 1.0.0 \
+  --version 1.0.1 \
   --add-source "$HOME/local-tools"
 ```
 
@@ -51,7 +51,7 @@ dotnet tool install --global JiraSubtaskGenerator \
 
 ```bash
 dotnet tool install --global JiraSubtaskGenerator \
-  --version 1.0.0 \
+  --version 1.0.1 \
   --add-source "$HOME/local-tools"
 ```
 
