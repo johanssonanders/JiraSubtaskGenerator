@@ -21,20 +21,41 @@ namespace JiraSubtaskGenerator
         return 0;
       }
 
-      using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+      var verbose = args.Contains("--verbose");
 
+      using var loggerFactory = verbose
+        ? LoggerFactory.Create(builder => builder.AddSimpleConsole())
+        : LoggerFactory.Create(builder => { });
       var logger = loggerFactory.CreateLogger<Program>();
 
-      var jiraUrl = Environment.GetEnvironmentVariable("JIRA_URL");
-      var jiraEmail = Environment.GetEnvironmentVariable("JIRA_EMAIL");
-      var jiraToken = Environment.GetEnvironmentVariable("JIRA_TOKEN");
+      JiraConfig jiraConfig;
 
-      if (string.IsNullOrWhiteSpace(jiraUrl) ||
-          string.IsNullOrWhiteSpace(jiraEmail) ||
-          string.IsNullOrWhiteSpace(jiraToken))
+
+      if (TryGetArgValue(args, "--config", out var configFilePath))
       {
-        Console.WriteLine("JIRA_URL, JIRA_EMAIL, and JIRA_TOKEN must be set as environment variables.");
-        return 1;
+        try
+        {
+          jiraConfig = ParseJiraConfigFile(configFilePath);
+        }
+        catch (Exception e)
+        {
+          Console.WriteLine($"Error when parsing {configFilePath}: {e.ToString}");
+          return -1;
+        }
+      }
+      else
+      {
+        var jiraUrl = Environment.GetEnvironmentVariable("JIRA_URL");
+        var jiraEmail = Environment.GetEnvironmentVariable("JIRA_EMAIL");
+        var jiraToken = Environment.GetEnvironmentVariable("JIRA_TOKEN");
+
+        if (string.IsNullOrWhiteSpace(jiraUrl) || string.IsNullOrWhiteSpace(jiraEmail) || string.IsNullOrWhiteSpace(jiraToken))
+        {
+          Console.WriteLine("JIRA_URL, JIRA_EMAIL, and JIRA_TOKEN must be set as environment variables if not provided via --config.");
+          return 1;
+        }
+
+        jiraConfig = new JiraConfig(jiraUrl, jiraEmail, jiraToken);
       }
 
       var dryRun = args.Contains("--dry-run");
@@ -57,16 +78,24 @@ namespace JiraSubtaskGenerator
         logger.LogInformation($"Project: {batch.ProjectKey}, Parent: {batch.ParentKey}");
         logger.LogInformation($"Found {batch.Subtasks.Count} subtasks.");
 
-        if (dryRun)
+        foreach (var s in batch.Subtasks)
         {
-          foreach (var s in batch.Subtasks)
-          {
-            Console.WriteLine($"[Dry Run] Would create subtask: '{s.Title}' - {s.EstimatedHours}h");
-          }
+          Console.WriteLine($"\t'{s.Title}' - {s.EstimatedHours}h");
         }
-        else
+
+        if (!dryRun)
         {
-          var jira = new JiraClient(jiraUrl, jiraEmail, jiraToken, logger);
+          Console.Write($"Do you want to continue and add {batch.Subtasks.Count} subtasks to the parent {batch.ParentKey}? (y/n): ");
+          var key = Console.ReadKey();
+          Console.WriteLine();
+
+          if (key.Key != ConsoleKey.Y)
+          {
+            Console.WriteLine("Aborting...");
+            return 0;
+          }
+
+          var jira = new JiraClient(jiraConfig, logger);
           var subTaskTypes = await jira.GetSubtaskIssueTypesForProjectKeyAsync(batch.ProjectKey);
           foreach (var s in subTaskTypes)
           {
@@ -76,15 +105,22 @@ namespace JiraSubtaskGenerator
           var subtaskType = subTaskTypes.FirstOrDefault();
           if (subtaskType == null)
           {
+            Console.WriteLine("No subtask issue type found in the project, aborting");
             logger.LogError("No subtask issuetypes found in the project.");
             return 2;
           }
+
+          Console.WriteLine("Please wait while creating subtasks");
 
           foreach (var s in batch.Subtasks)
           {
             var issueKey = await jira.CreateSubtaskAsync(batch.ProjectKey, subtaskType, batch.ParentKey, s);
             logger.LogInformation($"Created subtask: {issueKey} for '{s.Title}'");
+            Console.Write(".");
           }
+
+          Console.WriteLine();
+          Console.WriteLine("Done with creating subtasks");
         }
       }
       catch (Exception ex)
@@ -104,6 +140,51 @@ namespace JiraSubtaskGenerator
         : string.Empty;
 
       return !string.IsNullOrEmpty(value);
+    }
+
+    public static JiraConfig ParseJiraConfigFile(string filePath)
+    {
+      if (!File.Exists(filePath))
+        throw new FileNotFoundException("Config file not found", filePath);
+
+      string? jiraUrl = null;
+      string? jiraEmail = null;
+      string? jiraToken = null;
+
+      var lines = File.ReadAllLines(filePath);
+
+      foreach (var line in lines)
+      {
+        if (string.IsNullOrWhiteSpace(line))
+          continue;
+
+        var parts = line.Split('=', 2, StringSplitOptions.TrimEntries);
+        if (parts.Length != 2)
+          continue;
+
+        var key = parts[0];
+        var value = parts[1];
+
+        switch (key)
+        {
+          case "JIRA_URL":
+            jiraUrl = value;
+            break;
+
+          case "JIRA_EMAIL":
+            jiraEmail = value;
+            break;
+
+          case "JIRA_TOKEN":
+            jiraToken = value;
+            break;
+        }
+      }
+
+      if (jiraUrl is null || jiraEmail is null || jiraToken is null)
+        throw new InvalidDataException("Config file missing required fields");
+
+      return new JiraConfig(jiraUrl, jiraEmail, jiraToken);
     }
 
     static void ShowReadme()

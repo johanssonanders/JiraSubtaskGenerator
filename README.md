@@ -66,9 +66,24 @@ If installed as tool from a nuget package to executable can be called with `subt
 
 If the executable is used directly, call it as per usual with `JiraSubtaskGenerator.exe`.
 
+Supported commands:
+```bash
+ --help
+ --file
+ --dry-run
+ --config
+ --verbose
+```
+
 #### Help
 ```bash
 subtasks --help
+```
+
+#### Jira Configuration
+Optional configuration file with jira url, email and token if not present in environment variables.
+```bash
+subtasks --config configFile.txt
 ```
 
 #### Dry Run
@@ -81,10 +96,23 @@ subtasks --file input.md --dry-run
 ```bash
 subtasks --file input.md
 ```
+OR
 
-> ⚠️ Make sure to configure your Jira URL, email, and API token as environment variables:
+```bash
+subtasks --file input.md --config configFile.txt
+```
 
-## 🛠️ Environment Variables
+#### Verbose
+Verbose debug output in the console is supported via
+```bash
+subtasks --verbose
+```
+
+> ⚠️ Make sure to configure your Jira URL, email, and API token as environment variables or supply a config file:
+
+## 🛠️ Jira Configuration
+
+### Environment Variables
 On Windows, you can set environment variables in PowerShell like this:
 ```powershell
 $env:JIRA_URL="https://yourdomain.atlassian.net"
@@ -98,6 +126,14 @@ export JIRA_URL="https://yourdomain.atlassian.net"
 export JIRA_EMAIL="you@example.com"
 export JIRA_TOKEN="your_token"
 ```  
+
+### Configuration file
+Create a text file on the following format
+```
+JIRA_URL=https://yourdomain.atlassian.net
+JIRA_EMAIL=you@example.com
+JIRA_TOKEN=your_token
+```
 
 ## 📄 Markdown Format
 

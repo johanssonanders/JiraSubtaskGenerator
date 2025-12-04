@@ -10,6 +10,12 @@ namespace JiraSubtaskGenerator
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
 
+    public JiraClient(JiraConfig config, ILogger logger)
+    : this(config.JiraUrl, config.JiraEmail, config.JiraToken, logger)
+    {
+
+    }
+
     public JiraClient(string baseUrl, string email, string apiToken, ILogger logger)
     {
       _logger = logger;
